@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Booking</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .step {
+            padding: 24px;
+            display: none;
+        }
+        
+        .step.active {
+            display: block;
+        }
+        
+        .step-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+        
+        /* Date Picker Styles */
+        .date-section {
+            margin-bottom: 24px;
+        }
+        
+        .date-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .date-input {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px 12px;
+            font-size: 16px;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        
+        .date-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+        
+        .date-input.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .date-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        
+        .date-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .date-placeholder {
+            color: #999;
+            font-style: italic;
+        }
+        
+        .nights-info {
+            text-align: center;
+            color: #667eea;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+        
+        /* Guest Selection */
+        .guest-selector {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .guest-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .guest-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .guest-info h3 {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .guest-info p {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .counter-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .counter-btn {
+            width: 36px;
+            height: 36px;
+            border: 2px solid #e9ecef;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .counter-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        
+        .counter-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .counter-value {
+            font-size: 18px;
+            font-weight: 600;
+            min-width: 32px;
+            text-align: center;
+        }
+        
+        /* Addon Styles */
+        .addon-list {
+            margin-bottom: 24px;
+        }
+        
+        .addon-item {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .addon-item:hover {
+            border-color: #667eea;
+        }
+        
+        .addon-item.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .addon-info h3 {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .addon-info p {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .addon-price {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .addon-checkbox {
+            width: 20px;
+            height: 20px;
+        }
+        
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        /* Button Styles */
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .step-indicator {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 480px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏨 จองห้องพัก</h1>
+            <p>เลือกวันที่และรายละเอียดการเข้าพัก</p>
+        </div>
+
+        <!-- Step 1: Date Selection -->
+        <div id="step-dates" class="step active">
+            <div class="step-indicator">ขั้นตอน 1 จาก 5</div>
+            <h2 class="step-title">เลือกวันที่เข้าพัก</h2>
+            
+            <div class="date-section">
+                <div class="date-inputs">
+                    <div class="date-input" id="checkin-input">
+                        <div class="date-label">เช็คอิน</div>
+                        <div class="date-value">
+                            <span id="checkin-display" class="date-placeholder">เลือกวันที่</span>
+                        </div>
+                    </div>
+                    
+                    <div class="date-input" id="checkout-input">
+                        <div class="date-label">เช็คเอ้าท์</div>
+                        <div class="date-value">
+                            <span id="checkout-display" class="date-placeholder">เลือกวันที่</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="nights-info" class="nights-info" style="display: none;"></div>
+            </div>
+
+            <button id="dates-continue" class="btn btn-primary" disabled>ถัดไป</button>
+        </div>
+
+        <!-- Step 2: Guest Selection -->
+        <div id="step-guests" class="step">
+            <div class="step-indicator">ขั้นตอน 2 จาก 5</div>
+            <h2 class="step-title">จำนวนผู้เข้าพัก</h2>
+            
+            <div class="guest-selector">
+                <div class="guest-row">
+                    <div class="guest-info">
+                        <h3>ผู้ใหญ่</h3>
+                        <p>อายุ 13 ปีขึ้นไป</p>
+                    </div>
+                    <div class="counter-controls">
+                        <button class="counter-btn" id="adults-minus">-</button>
+                        <span class="counter-value" id="adults-count">1</span>
+                        <button class="counter-btn" id="adults-plus">+</button>
+                    </div>
+                </div>
+                
+                <div class="guest-row">
+                    <div class="guest-info">
+                        <h3>เด็ก</h3>
+                        <p>อายุ 0-12 ปี</p>
+                    </div>
+                    <div class="counter-controls">
+                        <button class="counter-btn" id="children-minus">-</button>
+                        <span class="counter-value" id="children-count">0</span>
+                        <button class="counter-btn" id="children-plus">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <button id="guests-continue" class="btn btn-primary">ถัดไป</button>
+        </div>
+
+        <!-- Step 3: Addons -->
+        <div id="step-addons" class="step">
+            <div class="step-indicator">ขั้นตอน 3 จาก 5</div>
+            <h2 class="step-title">บริการเพิ่มเติม</h2>
+            
+            <div class="addon-list">
+                <div class="addon-item" data-addon="breakfast">
+                    <div class="addon-info">
+                        <h3>🍳 อาหารเช้า</h3>
+                        <p>บุฟเฟ่ต์อาหารเช้าสไตล์นานาชาติ</p>
+                    </div>
+                    <div class="addon-price">+200 บาท</div>
+                    <input type="checkbox" class="addon-checkbox" hidden>
+                </div>
+                
+                <div class="addon-item" data-addon="parking">
+                    <div class="addon-info">
+                        <h3>🚗 ที่จอดรถ</h3>
+                        <p>ที่จอดรถในอาคารปลอดภัย</p>
+                    </div>
+                    <div class="addon-price">+100 บาท</div>
+                    <input type="checkbox" class="addon-checkbox" hidden>
+                </div>
+                
+                <div class="addon-item" data-addon="wifi">
+                    <div class="addon-info">
+                        <h3>📶 WiFi Premium</h3>
+                        <p>อินเตอร์เน็ตความเร็วสูง</p>
+                    </div>
+                    <div class="addon-price">+50 บาท</div>
+                    <input type="checkbox" class="addon-checkbox" hidden>
+                </div>
+                
+                <div class="addon-item" data-addon="spa">
+                    <div class="addon-info">
+                        <h3>🧖‍♀️ สปาและนวด</h3>
+                        <p>บริการนวดแผนไทย 1 ชั่วโมง</p>
+                    </div>
+                    <div class="addon-price">+800 บาท</div>
+                    <input type="checkbox" class="addon-checkbox" hidden>
+                </div>
+            </div>
+
+            <button id="addons-continue" class="btn btn-primary">ถัดไป</button>
+        </div>
+
+        <!-- Step 4: Guest Info -->
+        <div id="step-guest" class="step">
+            <div class="step-indicator">ขั้นตอน 4 จาก 5</div>
+            <h2 class="step-title">ข้อมูลผู้เข้าพัก</h2>
+            
+            <form id="guestForm">
+                <div class="form-group">
+                    <label class="form-label">ชื่อ</label>
+                    <input type="text" class="form-input" id="firstName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">นามสกุล</label>
+                    <input type="text" class="form-input" id="lastName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">อีเมล</label>
+                    <input type="email" class="form-input" id="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">เบอร์โทรศัพท์</label>
+                    <input type="tel" class="form-input" id="phone" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">ส่งข้อมูลการจอง</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let bookingData = {
+            checkIn: null,
+            checkOut: null,
+            adults: 1,
+            children: 0,
+            addons: [],
+            guest: {}
+        };
+
+        let checkinPicker, checkoutPicker;
+
+        window.onload = function() {
+            liff.init({
+                liffId: "YOUR-LIFF-ID"
+            }).then(() => {
+                initializeDatePickers();
+                initializeGuestControls();
+                initializeAddons();
+                initializeGuestForm();
+            }).catch(err => {
+                console.error('LIFF initialization failed', err);
+            });
+        };
+
+        function initializeDatePickers() {
+            // Check-in picker
+            checkinPicker = flatpickr("#checkin-input", {
+                minDate: "today",
+                dateFormat: "Y-m-d",
+                onChange: function(selectedDates, dateStr) {
+                    if (selectedDates.length > 0) {
+                        bookingData.checkIn = selectedDates[0];
+                        document.getElementById('checkin-display').textContent = 
+                            selectedDates[0].toLocaleDateString('th-TH', {
+                                day: 'numeric',
+                                month: 'short'
+                            });
+                        document.getElementById('checkin-input').classList.add('selected');
+                        
+                        // Update checkout picker minimum date
+                        const minCheckout = new Date(selectedDates[0]);
+                        minCheckout.setDate(minCheckout.getDate() + 1);
+                        checkoutPicker.set('minDate', minCheckout);
+                        
+                        // Auto focus checkout if not selected
+                        if (!bookingData.checkOut) {
+                            setTimeout(() => checkoutPicker.open(), 100);
+                        }
+                        
+                        updateNightsDisplay();
+                    }
+                }
+            });
+
+            // Check-out picker
+            checkoutPicker = flatpickr("#checkout-input", {
+                minDate: new Date(Date.now() + 86400000), // tomorrow
+                dateFormat: "Y-m-d",
+                onChange: function(selectedDates, dateStr) {
+                    if (selectedDates.length > 0) {
+                        bookingData.checkOut = selectedDates[0];
+                        document.getElementById('checkout-display').textContent = 
+                            selectedDates[0].toLocaleDateString('th-TH', {
+                                day: 'numeric',
+                                month: 'short'
+                            });
+                        document.getElementById('checkout-input').classList.add('selected');
+                        updateNightsDisplay();
+                    }
+                }
+            });
+
+            document.getElementById('dates-continue').addEventListener('click', function() {
+                if (bookingData.checkIn && bookingData.checkOut) {
+                    const checkIn = bookingData.checkIn.toISOString().split('T')[0];
+                    const checkOut = bookingData.checkOut.toISOString().split('T')[0];
+                    
+                    liff.sendMessages([{
+                        type: 'text',
+                        text: `checkin: ${checkIn} checkout: ${checkOut}`
+                    }]);
+
+                    showStep('step-guests');
+                }
+            });
+        }
+
+        function updateNightsDisplay() {
+            const continueBtn = document.getElementById('dates-continue');
+            const nightsInfo = document.getElementById('nights-info');
+            
+            if (bookingData.checkIn && bookingData.checkOut) {
+                const nights = Math.ceil((bookingData.checkOut - bookingData.checkIn) / (1000 * 60 * 60 * 24));
+                if (nights > 0) {
+                    nightsInfo.textContent = `${nights} คืน`;
+                    nightsInfo.style.display = 'block';
+                    continueBtn.disabled = false;
+                } else {
+                    nightsInfo.style.display = 'none';
+                    continueBtn.disabled = true;
+                }
+            } else {
+                nightsInfo.style.display = 'none';
+                continueBtn.disabled = true;
+            }
+        }
+
+        function initializeGuestControls() {
+            // Adults controls
+            document.getElementById('adults-minus').addEventListener('click', () => {
+                if (bookingData.adults > 1) {
+                    bookingData.adults--;
+                    updateGuestDisplay();
+                }
+            });
+
+            document.getElementById('adults-plus').addEventListener('click', () => {
+                if (bookingData.adults < 10) {
+                    bookingData.adults++;
+                    updateGuestDisplay();
+                }
+            });
+
+            // Children controls
+            document.getElementById('children-minus').addEventListener('click', () => {
+                if (bookingData.children > 0) {
+                    bookingData.children--;
+                    updateGuestDisplay();
+                }
+            });
+
+            document.getElementById('children-plus').addEventListener('click', () => {
+                if (bookingData.children < 8) {
+                    bookingData.children++;
+                    updateGuestDisplay();
+                }
+            });
+
+            document.getElementById('guests-continue').addEventListener('click', () => {
+                liff.sendMessages([{
+                    type: 'text',
+                    text: `ผู้ใหญ่ ${bookingData.adults} คน เด็ก ${bookingData.children} คน`
+                }]);
+                showStep('step-addons');
+            });
+
+            updateGuestDisplay();
+        }
+
+        function updateGuestDisplay() {
+            document.getElementById('adults-count').textContent = bookingData.adults;
+            document.getElementById('children-count').textContent = bookingData.children;
+            
+            // Update button states
+            document.getElementById('adults-minus').disabled = bookingData.adults <= 1;
+            document.getElementById('adults-plus').disabled = bookingData.adults >= 10;
+            document.getElementById('children-minus').disabled = bookingData.children <= 0;
+            document.getElementById('children-plus').disabled = bookingData.children >= 8;
+        }
+
+        function initializeAddons() {
+            const addonItems = document.querySelectorAll('.addon-item');
+            
+            addonItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const addon = this.dataset.addon;
+                    const checkbox = this.querySelector('.addon-checkbox');
+                    
+                    if (this.classList.contains('selected')) {
+                        this.classList.remove('selected');
+                        checkbox.checked = false;
+                        bookingData.addons = bookingData.addons.filter(a => a !== addon);
+                    } else {
+                        this.classList.add('selected');
+                        checkbox.checked = true;
+                        bookingData.addons.push(addon);
+                    }
+                });
+            });
+
+            document.getElementById('addons-continue').addEventListener('click', function() {
+                const message = bookingData.addons.length > 0 
+                    ? `addons: ${bookingData.addons.join(', ')}`
+                    : 'addons: none';
+                
+                liff.sendMessages([{
+                    type: 'text',
+                    text: message
+                }]);
+
+                showStep('step-guest');
+            });
+        }
+
+        function initializeGuestForm() {
+            document.getElementById('guestForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const guest = {
+                    firstName: document.getElementById('firstName').value.trim(),
+                    lastName: document.getElementById('lastName').value.trim(),
+                    email: document.getElementById('email').value.trim(),
+                    phone: document.getElementById('phone').value.trim()
+                };
+
+                if (!guest.firstName || !guest.lastName || !guest.email || !guest.phone) {
+                    alert('กรุณากรอกข้อมูลให้ครบทุกช่อง');
+                    return;
+                }
+
+                bookingData.guest = guest;
+
+                const message = `ข้อมูลผู้เข้าพัก ชื่อ ${guest.firstName} นามสกุล ${guest.lastName} อีเมล ${guest.email} เบอร์ติดต่อ ${guest.phone}`;
+
+                liff.sendMessages([{
+                    type: 'text',
+                    text: message
+                }]).then(() => {
+                    liff.closeWindow();
+                }).catch(err => {
+                    console.error('Error sending message', err);
+                    alert('เกิดข้อผิดพลาดในการส่งข้อมูล กรุณาลองใหม่');
+                });
+            });
+        }
+
+        function showStep(stepId) {
+            document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+            document.getElementById(stepId).classList.add('active');
+        }
+    </script>
+</body>
+</html>
